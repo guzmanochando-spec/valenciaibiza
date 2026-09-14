@@ -2,6 +2,7 @@
 #include "VIShipPawn.h"
 #include "VIMariaPresence.h"
 #include "VIGameMode.h"
+#include "VIBridgeHUD.h"
 #include "Kismet/GameplayStatics.h"
 
 AVIPlayerController::AVIPlayerController()
@@ -14,28 +15,19 @@ void AVIPlayerController::OnPossess(APawn* InPawn)
 	Super::OnPossess(InPawn);
 }
 
-AVIShipPawn* AVIPlayerController::Ship() const
-{
-	return Cast<AVIShipPawn>(GetPawn());
-}
+AVIShipPawn* AVIPlayerController::Ship() const { return Cast<AVIShipPawn>(GetPawn()); }
+AVIBridgeHUD* AVIPlayerController::BridgeHud() const { return Cast<AVIBridgeHUD>(GetHUD()); }
 
 AVIMariaPresence* AVIPlayerController::Maria() const
 {
-	if (const AVIGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AVIGameMode>() : nullptr)
-	{
-		return GM->GetMaria();
-	}
+	if (const AVIGameMode* GM = GetWorld() ? GetWorld()->GetAuthGameMode<AVIGameMode>() : nullptr) return GM->GetMaria();
 	return nullptr;
 }
 
 void AVIPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
-	if (!InputComponent)
-	{
-		return;
-	}
-
+	if (!InputComponent) return;
 	InputComponent->BindAxis("Throttle", this, &AVIPlayerController::Throttle);
 	InputComponent->BindAxis("Steer", this, &AVIPlayerController::Steer);
 	InputComponent->BindAxis("LookYaw", this, &AVIPlayerController::LookYaw);
@@ -50,97 +42,49 @@ void AVIPlayerController::SetupInputComponent()
 	InputComponent->BindAction("AskMariaChart", IE_Pressed, this, &AVIPlayerController::AskMariaChart);
 	InputComponent->BindAction("AskMariaRadar", IE_Pressed, this, &AVIPlayerController::AskMariaRadar);
 	InputComponent->BindAction("AskMariaRadio", IE_Pressed, this, &AVIPlayerController::AskMariaRadio);
+	InputComponent->BindAction("ToggleMap", IE_Pressed, this, &AVIPlayerController::ToggleMap);
+	InputComponent->BindAction("RadarRange", IE_Pressed, this, &AVIPlayerController::RadarRange);
+	InputComponent->BindAction("VhfPtt", IE_Pressed, this, &AVIPlayerController::VhfPtt);
+	InputComponent->BindAction("VhfChannel", IE_Pressed, this, &AVIPlayerController::VhfChannel);
 }
 
-void AVIPlayerController::Throttle(float V)
-{
-	if (AVIShipPawn* S = Ship())
-	{
-		S->SetThrottleInput(V);
-	}
-}
-
-void AVIPlayerController::Steer(float V)
-{
-	if (AVIShipPawn* S = Ship())
-	{
-		S->SetSteerInput(V);
-	}
-}
-
-void AVIPlayerController::LookYaw(float V)
-{
-	if (AVIShipPawn* S = Ship())
-	{
-		S->SetLookInput(V, 0.0f);
-	}
-}
-
-void AVIPlayerController::LookPitch(float V)
-{
-	if (AVIShipPawn* S = Ship())
-	{
-		S->SetLookInput(0.0f, V);
-	}
-}
-
+void AVIPlayerController::Throttle(float V) { if (AVIShipPawn* S = Ship()) S->SetThrottleInput(V); }
+void AVIPlayerController::Steer(float V) { if (AVIShipPawn* S = Ship()) S->SetSteerInput(V); }
+void AVIPlayerController::LookYaw(float V) { if (AVIShipPawn* S = Ship()) S->SetLookInput(V, 0.f); }
+void AVIPlayerController::LookPitch(float V) { if (AVIShipPawn* S = Ship()) S->SetLookInput(0.f, V); }
 void AVIPlayerController::ToggleAutopilot()
 {
-	if (AVIShipPawn* S = Ship())
-	{
-		S->ToggleAutopilot();
-		if (AVIMariaPresence* M = Maria())
-		{
-			M->CueVoyage(S->IsAutopilot() ? TEXT("autopilot_on") : TEXT("depart"));
-		}
-	}
+	if (AVIShipPawn* S = Ship()) { S->ToggleAutopilot(); if (AVIMariaPresence* M = Maria()) M->CueVoyage(S->IsAutopilot() ? TEXT("autopilot_on") : TEXT("depart")); }
 }
-
-void AVIPlayerController::CycleCamera()
-{
-	if (AVIShipPawn* S = Ship())
-	{
-		S->CycleCamera();
-	}
-}
-
-void AVIPlayerController::TimeX1() { UGameplayStatics::SetGlobalTimeDilation(this, 1.0f); }
-void AVIPlayerController::TimeX10() { UGameplayStatics::SetGlobalTimeDilation(this, 10.0f); }
-void AVIPlayerController::TimeX30() { UGameplayStatics::SetGlobalTimeDilation(this, 30.0f); }
-void AVIPlayerController::TimeX60() { UGameplayStatics::SetGlobalTimeDilation(this, 60.0f); }
-
+void AVIPlayerController::CycleCamera() { if (AVIShipPawn* S = Ship()) S->CycleCamera(); }
+void AVIPlayerController::TimeX1() { UGameplayStatics::SetGlobalTimeDilation(this, 1.f); }
+void AVIPlayerController::TimeX10() { UGameplayStatics::SetGlobalTimeDilation(this, 10.f); }
+void AVIPlayerController::TimeX30() { UGameplayStatics::SetGlobalTimeDilation(this, 30.f); }
+void AVIPlayerController::TimeX60() { UGameplayStatics::SetGlobalTimeDilation(this, 60.f); }
 void AVIPlayerController::ResetVoyage()
 {
-	if (AVIShipPawn* S = Ship())
-	{
-		S->ResetVoyage();
-	}
-	if (AVIMariaPresence* M = Maria())
-	{
-		M->CueVoyage(TEXT("depart"));
-	}
+	if (AVIShipPawn* S = Ship()) S->ResetVoyage();
+	if (AVIMariaPresence* M = Maria()) M->CueVoyage(TEXT("depart"));
 }
-
 void AVIPlayerController::AskMariaChart()
 {
-	if (AVIMariaPresence* M = Maria())
-	{
-		M->CueVoyage(TEXT("open_chart"));
-	}
+	if (AVIBridgeHUD* H = BridgeHud()) H->ToggleChart();
+	if (AVIMariaPresence* M = Maria()) M->CueVoyage(TEXT("open_chart"));
 }
-
 void AVIPlayerController::AskMariaRadar()
 {
-	if (AVIMariaPresence* M = Maria())
-	{
-		M->CueVoyage(TEXT("open_radar"));
-	}
+	if (AVIBridgeHUD* H = BridgeHud()) H->ToggleRadar();
+	if (AVIMariaPresence* M = Maria()) M->CueVoyage(TEXT("open_radar"));
 }
-
 void AVIPlayerController::AskMariaRadio()
 {
-	if (AVIMariaPresence* M = Maria())
-	{
-		M->CueVoyage(TEXT("open_vhf"));
-	}
+	if (AVIBridgeHUD* H = BridgeHud()) H->ToggleVhf();
+	if (AVIMariaPresence* M = Maria()) M->CueVoyage(TEXT("open_vhf"));
 }
+void AVIPlayerController::ToggleMap()
+{
+	if (AVIBridgeHUD* H = BridgeHud()) { const bool On = !(H->bChart && H->bRadar && H->bVhf); H->bChart = On; H->bRadar = On; H->bVhf = On; }
+}
+void AVIPlayerController::RadarRange() { if (AVIBridgeHUD* H = BridgeHud()) H->CycleRadarRange(); }
+void AVIPlayerController::VhfPtt() { if (AVIBridgeHUD* H = BridgeHud()) H->TransmitVhf(); }
+void AVIPlayerController::VhfChannel() { if (AVIBridgeHUD* H = BridgeHud()) H->CycleVhfChannel(); }
