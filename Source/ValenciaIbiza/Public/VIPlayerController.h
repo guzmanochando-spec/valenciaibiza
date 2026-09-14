@@ -6,6 +6,7 @@
 
 class AVIShipPawn;
 class AVIMariaPresence;
+class AVIBridgeHUD;
 
 UCLASS()
 class VALENCIAIBIZA_API AVIPlayerController : public APlayerController
@@ -22,6 +23,7 @@ protected:
 private:
 	AVIShipPawn* Ship() const;
 	AVIMariaPresence* Maria() const;
+	AVIBridgeHUD* BridgeHud() const;
 
 	void Throttle(float V);
 	void Steer(float V);
@@ -37,4 +39,8 @@ private:
 	void AskMariaChart();
 	void AskMariaRadar();
 	void AskMariaRadio();
+	void ToggleMap();
+	void RadarRange();
+	void VhfPtt();
+	void VhfChannel();
 };
