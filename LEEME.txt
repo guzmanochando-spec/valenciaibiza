@@ -1,0 +1,20 @@
+ValenciaIbiza — no hace falta Visual Studio a mano.
+
+1. Cierra Unreal si está abierto.
+2. Haz doble clic en ACTUALIZAR.bat
+3. Espera a que Unreal compile solo (primera vez tarda).
+4. Pulsa Play.
+
+Teclas:
+  Espacio  piloto automatico
+  C        camara
+  J        carta
+  K        radar
+  L        VHF
+  M        mostrar/ocultar paneles
+  W/S      maquinas (si sueltas el piloto)
+  A/D      timon
+  R        volver a Valencia
+  1 2 3 4  velocidad del tiempo
+
+No edites codigo. Si algo falla, copia la ventana roja y pégala en el chat.
