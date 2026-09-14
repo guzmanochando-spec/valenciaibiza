@@ -4,12 +4,15 @@
 #include "VISkyDirector.h"
 #include "VIMariaPresence.h"
 #include "VIPlayerController.h"
+#include "VITrafficDirector.h"
+#include "VIBridgeHUD.h"
 #include "Kismet/GameplayStatics.h"
 
 AVIGameMode::AVIGameMode()
 {
 	DefaultPawnClass = AVIShipPawn::StaticClass();
 	PlayerControllerClass = AVIPlayerController::StaticClass();
+	HUDClass = AVIBridgeHUD::StaticClass();
 }
 
 void AVIGameMode::BeginPlay()
@@ -21,6 +24,7 @@ void AVIGameMode::BeginPlay()
 
 	Sky = GetWorld()->SpawnActor<AVISkyDirector>(AVISkyDirector::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, P);
 	Director = GetWorld()->SpawnActor<AVIWorldDirector>(AVIWorldDirector::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, P);
+	Traffic = GetWorld()->SpawnActor<AVITrafficDirector>(AVITrafficDirector::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, P);
 
 	APawn* Existing = UGameplayStatics::GetPlayerPawn(this, 0);
 	Ship = Cast<AVIShipPawn>(Existing);
@@ -33,14 +37,8 @@ void AVIGameMode::BeginPlay()
 		}
 	}
 
-	if (Director && Ship)
-	{
-		Director->InitializeVoyage(Ship);
-	}
+	if (Director && Ship) Director->InitializeVoyage(Ship);
 
 	Maria = GetWorld()->SpawnActor<AVIMariaPresence>(AVIMariaPresence::StaticClass(), FVector::ZeroVector, FRotator::ZeroRotator, P);
-	if (Maria && Ship)
-	{
-		Maria->AttachToHelm(Ship);
-	}
+	if (Maria && Ship) Maria->AttachToHelm(Ship);
 }
